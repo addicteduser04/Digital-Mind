@@ -1,7 +1,12 @@
 import Link from "next/link";
-import { Inbox, Plus, Sparkles, Sun } from "lucide-react";
+import { Inbox, ListTodo, Sparkles, Sun } from "lucide-react";
+import { GlobalQuickAction } from "./global-quick-action";
 
-const navItems = [{ label: "Today", href: "/today", icon: Sun }];
+const navItems = [
+  { label: "Today", href: "/today", icon: Sun },
+  { label: "Tasks", href: "/tasks", icon: ListTodo },
+  { label: "Inbox", href: "/inbox", icon: Inbox }
+];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
         <nav className="mt-10" aria-label="Primary navigation">
           {navItems.map(({ label, href, icon: Icon }) => (
-            <Link key={href} href={href} aria-current="page" className="flex items-center gap-3 rounded-lg bg-sidebar-accent px-3 py-2.5 text-sm font-medium">
+            <Link key={href} href={href} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-sidebar-accent">
               <Icon size={17} strokeWidth={1.8} />{label}
             </Link>
           ))}
@@ -39,12 +44,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="mx-auto max-w-6xl px-5 pb-28 pt-8 sm:px-8 md:pb-12 md:pt-12">{children}</main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid h-[76px] grid-cols-3 border-t border-border bg-background/95 px-4 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden" aria-label="Mobile navigation">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid h-[76px] grid-cols-4 border-t border-border bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden" aria-label="Mobile navigation">
         <Link href="/today" aria-current="page" className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium"><Sun size={20} /><span>Today</span></Link>
-        <button disabled aria-label="Quick capture coming in Phase 2" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground">
-          <span className="grid size-11 -translate-y-3 place-items-center rounded-full bg-foreground text-background shadow-lg"><Plus size={20} /></span><span className="-translate-y-2">Capture</span>
-        </button>
-        <span className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground" aria-label="More features coming soon"><Inbox size={20} /><span>Later</span></span>
+        <Link href="/tasks" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><ListTodo size={20} /><span>Tasks</span></Link>
+        <GlobalQuickAction />
+        <Link href="/inbox" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><Inbox size={20} /><span>Inbox</span></Link>
       </nav>
     </div>
   );

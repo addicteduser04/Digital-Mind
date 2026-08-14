@@ -1,79 +1,67 @@
 import type { Metadata } from "next";
-import { ArrowUpRight, CalendarDays, Check, Inbox, Plus } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Inbox, SlidersHorizontal } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { CaptureForm } from "@/components/capture-form";
+import { PriorityPicker } from "@/components/priority-picker";
+import { QuickCreateForm } from "@/components/quick-create-form";
+import { TaskRow } from "@/components/task-row";
+import { dateKeyInTimeZone, groupTodayTasks } from "@/lib/domain/today";
+import { getCurrentUser } from "@/server/auth/current-user";
+import { getTodayExecution } from "@/server/repositories/execution";
 
 export const metadata: Metadata = { title: "Today" };
+export const dynamic = "force-dynamic";
 
-const formattedDate = new Intl.DateTimeFormat("en-US", {
-  timeZone: "Africa/Casablanca",
-  weekday: "long",
-  month: "long",
-  day: "numeric"
-}).format(new Date());
+export default async function TodayPage() {
+  const user = await getCurrentUser();
+  const now = new Date();
+  const today = dateKeyInTimeZone(now, user.timezone);
+  const execution = await getTodayExecution(user.id, today);
+  const groups = groupTodayTasks(execution.tasks, today, user.timezone);
+  const priorityMap = new Map(execution.priorities.map((priority) => [priority.taskId, priority.position]));
+  const dateLabel = new Intl.DateTimeFormat("en-US", { timeZone: user.timezone, weekday: "long", month: "long", day: "numeric" }).format(now);
+  const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: user.timezone, hour: "numeric", hourCycle: "h23" }).format(now));
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const priorityTasks = execution.priorities.map((priority) => ({ ...priority, task: execution.tasks.find((task) => task.id === priority.taskId) })).filter((item) => item.task);
 
-export default function TodayPage() {
   return (
     <AppShell>
-      <section className="flex flex-col justify-between gap-6 border-b border-border pb-8 sm:flex-row sm:items-end">
-        <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{formattedDate}</p>
-          <h1 className="mt-3 text-4xl font-medium tracking-[-0.045em] sm:text-5xl">Good day.</h1>
-          <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">A clear day starts with deciding what deserves your attention.</p>
-        </div>
-        <div className="flex items-center gap-2 self-start rounded-full border border-border bg-card px-3 py-2 text-xs text-muted-foreground sm:self-auto">
-          <span className="size-1.5 rounded-full bg-amber-500" />Setup in progress
-        </div>
-      </section>
+      <header className="flex flex-col gap-6 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div><p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{dateLabel}</p><h1 className="mt-3 text-4xl font-medium tracking-[-0.045em] sm:text-5xl">{greeting}.</h1><p className="mt-3 text-sm text-muted-foreground">Choose what matters, then protect the time to do it.</p></div>
+        <Link href="/tasks" className="button-secondary self-start sm:self-auto"><SlidersHorizontal size={15} />All tasks</Link>
+      </header>
 
-      <div className="grid gap-10 pt-10 lg:grid-cols-[1.5fr_1fr] lg:gap-14">
-        <div className="space-y-12">
+      <div className="grid gap-12 pt-9 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,.85fr)] lg:gap-14">
+        <div className="space-y-11">
           <section aria-labelledby="priorities-heading">
-            <div className="flex items-center justify-between">
-              <div><p className="section-kicker">Decide</p><h2 id="priorities-heading" className="section-title">Top priorities</h2></div>
-              <span className="font-mono text-xs text-muted-foreground">0 / 3</span>
+            <div className="flex items-end justify-between"><div><p className="section-kicker">Primary commitments</p><h2 id="priorities-heading" className="section-title">Top priorities</h2></div><span className="font-mono text-xs text-muted-foreground">{priorityTasks.length} / 3</span></div>
+            <div className="mt-4 rounded-2xl border border-border bg-card px-4 sm:px-5">
+              {priorityTasks.length ? priorityTasks.map(({ position, task }) => <TaskRow key={task!.id} task={task!} priorityPosition={position} timeZone={user.timezone} />) : <EmptyLine text="No priorities chosen yet." />}
             </div>
-            <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card">
-              {[1, 2, 3].map((number) => (
-                <div key={number} className="flex min-h-16 items-center gap-4 border-b border-border px-5 last:border-b-0">
-                  <span className="grid size-6 place-items-center rounded-full border border-dashed border-border text-[10px] text-muted-foreground">{number}</span>
-                  <span className="text-sm text-muted-foreground">A priority will live here</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">Priority planning arrives with the execution experience in Phase 2.</p>
+            <details className="group mt-3 rounded-xl border border-transparent open:border-border open:bg-card">
+              <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground"><ChevronDown className="transition-transform group-open:rotate-180" size={14} />Choose today’s priorities</summary>
+              <div className="border-t border-border p-3"><PriorityPicker tasks={execution.tasks.map(({ id, title }) => ({ id, title }))} selected={execution.priorities.map(({ taskId }) => taskId)} /></div>
+            </details>
           </section>
 
-          <section aria-labelledby="schedule-heading">
-            <div><p className="section-kicker">Execute</p><h2 id="schedule-heading" className="section-title">Today’s schedule</h2></div>
-            <div className="mt-5 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/40 px-6 text-center">
-              <span className="grid size-10 place-items-center rounded-xl bg-secondary text-muted-foreground"><CalendarDays size={18} /></span>
-              <p className="mt-4 text-sm font-medium">Your day is open</p>
-              <p className="mt-1 max-w-xs text-xs leading-5 text-muted-foreground">Calendar and time-blocking tools will be introduced in a later phase.</p>
-            </div>
-          </section>
+          <TaskGroup title="Overdue" kicker="Needs attention" tasks={groups.overdue} priorityMap={priorityMap} timeZone={user.timezone} empty="Nothing overdue." />
+          <TaskGroup title="Scheduled today" kicker="Protected time" tasks={groups.scheduled} priorityMap={priorityMap} timeZone={user.timezone} empty="Nothing scheduled yet." />
+          <TaskGroup title="Due today" kicker="Due" tasks={groups.due} priorityMap={priorityMap} timeZone={user.timezone} empty="Nothing else due today." />
+          <TaskGroup title="Other tasks" kicker="Available next" tasks={groups.other.slice(0, 8)} priorityMap={priorityMap} timeZone={user.timezone} empty="No active tasks." />
         </div>
 
-        <aside className="space-y-10">
-          <section aria-labelledby="capture-heading">
-            <div><p className="section-kicker">Record</p><h2 id="capture-heading" className="section-title">Quick capture</h2></div>
-            <div className="mt-5 rounded-2xl border border-border bg-ink p-5 text-ink-foreground shadow-[0_18px_50px_-32px_rgba(14,18,16,0.6)]">
-              <div className="flex items-start gap-3"><Inbox className="mt-0.5" size={17} /><div><p className="text-sm font-medium">Clear your mind</p><p className="mt-1 text-xs leading-5 text-ink-muted">Capture first. Organize when you are ready.</p></div></div>
-              <button disabled className="mt-5 flex w-full cursor-not-allowed items-center justify-between rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-left text-xs text-ink-muted" aria-label="Quick capture coming in Phase 2">
-                Write something down… <Plus size={16} />
-              </button>
-            </div>
-          </section>
-
-          <section aria-labelledby="rhythm-heading">
-            <div><p className="section-kicker">Reflect</p><h2 id="rhythm-heading" className="section-title">Daily rhythm</h2></div>
-            <div className="mt-5 divide-y divide-border border-y border-border">
-              {[{ icon: Check, label: "Choose what matters", detail: "Top 3 priorities" }, { icon: ArrowUpRight, label: "Protect your attention", detail: "Plan focused time" }].map(({ icon: Icon, label, detail }) => (
-                <div key={label} className="flex items-center gap-3 py-4"><span className="grid size-9 place-items-center rounded-lg bg-secondary"><Icon size={16} /></span><div><p className="text-sm font-medium">{label}</p><p className="mt-0.5 text-xs text-muted-foreground">{detail}</p></div></div>
-              ))}
-            </div>
-          </section>
+        <aside className="space-y-9">
+          <section><p className="section-kicker">Plan</p><h2 className="section-title">Add task</h2><div className="mt-4"><QuickCreateForm /></div></section>
+          <section><p className="section-kicker">Record</p><h2 className="section-title">Quick capture</h2><div className="mt-4 rounded-2xl bg-ink p-5 text-ink-foreground"><div className="mb-5 flex items-start gap-3"><Inbox className="mt-0.5" size={17} /><div><p className="text-sm font-medium">Clear your mind</p><p className="mt-1 text-xs leading-5 text-ink-muted">Capture now. Organize later.</p></div></div><CaptureForm dark /></div></section>
         </aside>
       </div>
     </AppShell>
   );
+}
+
+function EmptyLine({ text }: { text: string }) { return <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>; }
+
+function TaskGroup({ title, kicker, tasks, priorityMap, timeZone, empty }: { title: string; kicker: string; tasks: Awaited<ReturnType<typeof getTodayExecution>>["tasks"]; priorityMap: Map<string, number>; timeZone: string; empty: string }) {
+  return <section aria-labelledby={`${title.replaceAll(" ", "-")}-heading`}><div className="flex items-end justify-between"><div><p className="section-kicker">{kicker}</p><h2 id={`${title.replaceAll(" ", "-")}-heading`} className="section-title">{title}</h2></div>{tasks.length ? <span className="font-mono text-xs text-muted-foreground">{tasks.length}</span> : null}</div><div className="mt-4 border-t border-border">{tasks.length ? tasks.map((task) => <TaskRow key={task.id} task={task} priorityPosition={priorityMap.get(task.id)} timeZone={timeZone} />) : <EmptyLine text={empty} />}</div></section>;
 }

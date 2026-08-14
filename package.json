@@ -13,6 +13,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env.local db/migrate.ts",
     "db:verify": "tsx --env-file=.env.local scripts/verify-schema.ts",
+    "db:bootstrap-user": "tsx --env-file=.env.local scripts/bootstrap-user.ts --write-env",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

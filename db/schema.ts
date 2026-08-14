@@ -251,6 +251,26 @@ export const inboxItems = pgTable(
   ]
 );
 
+export const dailyPriorities = pgTable(
+  "daily_priorities",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    priorityDate: date("priority_date").notNull(),
+    taskId: uuid("task_id").notNull(),
+    position: integer("position").notNull(),
+    createdAt
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [appUsers.id], name: "daily_priorities_user_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.taskId, table.userId], foreignColumns: [tasks.id, tasks.userId], name: "daily_priorities_task_owner_fk" }).onDelete("restrict"),
+    uniqueIndex("daily_priorities_user_date_position_unique").on(table.userId, table.priorityDate, table.position),
+    uniqueIndex("daily_priorities_user_date_task_unique").on(table.userId, table.priorityDate, table.taskId),
+    index("daily_priorities_user_date_idx").on(table.userId, table.priorityDate),
+    check("daily_priorities_position_range", sql`${table.position} between 1 and 3`)
+  ]
+);
+
 export const goalProgressHistory = pgTable(
   "goal_progress_history",
   {
@@ -278,3 +298,4 @@ export type Project = typeof projects.$inferSelect;
 export type Milestone = typeof milestones.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type InboxItem = typeof inboxItems.$inferSelect;
+export type DailyPriority = typeof dailyPriorities.$inferSelect;

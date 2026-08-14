@@ -24,6 +24,12 @@ Events use `timestamp with time zone`; date-only planning concepts use `date`. P
 
 `goal_progress_history` is the one Phase 1 history foundation. Goal progress is central and otherwise destructive to overwrite. Each sample retains progress, optional current value, owner, goal, and recording timestamp. Additional project, life-area, and analytics snapshots wait until their real workflows exist.
 
+## Daily priorities
+
+`daily_priorities` preserves the tasks explicitly chosen for each local calendar date. Positions are restricted to 1–3, with unique owner/date/position and owner/date/task keys. The composite task ownership foreign key rejects cross-owner assignments, while `ON DELETE RESTRICT` prevents an archived or historical priority from disappearing through task deletion. Replacing today’s set never touches previous dates.
+
+Today grouping uses one operational list with deterministic precedence: overdue, scheduled today, due today, then other active tasks. Priority membership is visual context and does not duplicate a task between groups.
+
 ## Bootstrap user
 
 No production bootstrap user is created automatically. `createAppUser` provides the future authentication/bootstrap boundary, while integration tests create uniquely named isolated users and remove them afterward. This avoids hardcoded personal information and accidental seed data in Neon.

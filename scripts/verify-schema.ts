@@ -3,6 +3,7 @@ import { getServerEnv } from "../lib/env";
 
 const expectedTables = [
   "app_users",
+  "daily_priorities",
   "goal_progress_history",
   "goals",
   "inbox_items",
