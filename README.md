@@ -2,7 +2,7 @@
 
 Digital Mind is a private personal operating system built around the loop **Plan → Execute → Record → Review → Adjust**.
 
-This repository currently contains Phase 0 only: the technical foundation, responsive application shell, database wiring, migration workflow, and development health check. Domain features begin in Phase 1 after review.
+This repository contains the approved foundation and the Phase 1 core relational model. UI execution workflows remain out of scope until Phase 2.
 
 ## Requirements
 
@@ -27,8 +27,12 @@ The UI is intentionally available before database configuration. `GET /api/healt
 - Review generated SQL under `drizzle/`.
 - Apply committed migrations with `npm run db:migrate`.
 - Inspect locally with `npm run db:studio` when appropriate.
+- Verify the deployed core structure with `npm run db:verify`.
+- Run isolated Neon constraint tests with `npm run test:integration`.
 
 Every schema change must be represented by a reviewed migration. Do not edit hosted database structures manually.
+
+Ownership, deletion, hierarchy, timestamp, and history decisions are documented in `docs/data-model.md`.
 
 ## Quality checks
 

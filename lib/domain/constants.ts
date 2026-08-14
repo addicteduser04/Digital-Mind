@@ -1,0 +1,10 @@
+export const lifeAreaStatuses = ["active", "archived"] as const;
+export const goalLevels = ["long_term", "yearly", "quarterly", "general"] as const;
+export const goalMeasurementTypes = ["binary", "numeric", "percentage", "milestone", "habit_based", "manual"] as const;
+export const goalStatuses = ["draft", "active", "paused", "completed", "abandoned", "archived"] as const;
+export const projectStatuses = ["planned", "active", "paused", "completed", "cancelled", "archived"] as const;
+export const milestoneStatuses = ["pending", "in_progress", "completed", "cancelled", "archived"] as const;
+export const taskStatuses = ["inbox", "todo", "scheduled", "in_progress", "completed", "cancelled", "archived"] as const;
+export const priorities = ["low", "medium", "high", "critical"] as const;
+export const commitmentLevels = ["must", "should", "could"] as const;
+export const inboxStatuses = ["unprocessed", "processed", "archived", "discarded"] as const;
