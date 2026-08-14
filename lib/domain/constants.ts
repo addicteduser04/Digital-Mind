@@ -8,3 +8,5 @@ export const taskStatuses = ["inbox", "todo", "scheduled", "in_progress", "compl
 export const priorities = ["low", "medium", "high", "critical"] as const;
 export const commitmentLevels = ["must", "should", "could"] as const;
 export const inboxStatuses = ["unprocessed", "processed", "archived", "discarded"] as const;
+export const calendarEventStatuses = ["confirmed", "cancelled", "archived"] as const;
+export const timeBlockStatuses = ["planned", "completed", "cancelled"] as const;

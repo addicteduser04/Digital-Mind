@@ -3,6 +3,7 @@ import { getServerEnv } from "../lib/env";
 
 const expectedTables = [
   "app_users",
+  "calendar_events",
   "daily_priorities",
   "goal_progress_history",
   "goals",
@@ -10,7 +11,8 @@ const expectedTables = [
   "life_areas",
   "milestones",
   "projects",
-  "tasks"
+  "tasks",
+  "time_blocks"
 ] as const;
 
 async function main() {

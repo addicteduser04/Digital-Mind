@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { BriefcaseBusiness, Compass, Inbox, ListTodo, Sparkles, Sun, Target } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Compass, Inbox, ListTodo, Sparkles, Sun, Target } from "lucide-react";
 import { GlobalQuickAction } from "./global-quick-action";
 
 const navItems = [
   { label: "Today", href: "/today", icon: Sun },
   { label: "Tasks", href: "/tasks", icon: ListTodo },
+  { label: "Calendar", href: "/calendar", icon: CalendarDays },
   { label: "Goals", href: "/goals", icon: Target },
   { label: "Projects", href: "/projects", icon: BriefcaseBusiness },
   { label: "Inbox", href: "/inbox", icon: Inbox },
@@ -47,10 +48,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="mx-auto max-w-6xl px-5 pb-28 pt-8 sm:px-8 md:pb-12 md:pt-12">{children}</main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid h-[76px] grid-cols-4 border-t border-border bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden" aria-label="Mobile navigation">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid h-[76px] grid-cols-5 border-t border-border bg-background/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden" aria-label="Mobile navigation">
         <Link href="/today" aria-current="page" className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium"><Sun size={20} /><span>Today</span></Link>
         <Link href="/tasks" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><ListTodo size={20} /><span>Tasks</span></Link>
         <GlobalQuickAction />
+        <Link href="/calendar" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><CalendarDays size={20} /><span>Calendar</span></Link>
         <Link href="/goals" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><Target size={20} /><span>Plan</span></Link>
       </nav>
     </div>

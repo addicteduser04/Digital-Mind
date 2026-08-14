@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 import {
   commitmentLevels,
+  calendarEventStatuses,
   goalLevels,
   goalMeasurementTypes,
   goalStatuses,
@@ -22,7 +23,8 @@ import {
   milestoneStatuses,
   priorities,
   projectStatuses,
-  taskStatuses
+  taskStatuses,
+  timeBlockStatuses
 } from "@/lib/domain/constants";
 
 const createdAt = timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
@@ -232,6 +234,65 @@ export const tasks = pgTable(
   ]
 );
 
+export const calendarEvents = pgTable(
+  "calendar_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    startAt: timestamp("start_at", { withTimezone: true }).notNull(),
+    endAt: timestamp("end_at", { withTimezone: true }).notNull(),
+    allDay: integer("all_day").notNull().default(0),
+    location: text("location"),
+    status: text("status").notNull().default("confirmed"),
+    createdAt,
+    updatedAt
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [appUsers.id], name: "calendar_events_user_fk" }).onDelete("restrict"),
+    uniqueIndex("calendar_events_id_user_unique").on(table.id, table.userId),
+    index("calendar_events_user_start_idx").on(table.userId, table.startAt),
+    index("calendar_events_user_status_start_idx").on(table.userId, table.status, table.startAt),
+    check("calendar_events_title_not_blank", sql`length(btrim(${table.title})) > 0`),
+    check("calendar_events_range_valid", sql`${table.endAt} >= ${table.startAt}`),
+    check("calendar_events_all_day_valid", sql`${table.allDay} in (0, 1)`),
+    check("calendar_events_status_valid", inList(table.status, calendarEventStatuses))
+  ]
+);
+
+export const timeBlocks = pgTable(
+  "time_blocks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    taskId: uuid("task_id"),
+    projectId: uuid("project_id"),
+    goalId: uuid("goal_id"),
+    lifeAreaId: uuid("life_area_id"),
+    title: text("title").notNull(),
+    description: text("description"),
+    startAt: timestamp("start_at", { withTimezone: true }).notNull(),
+    endAt: timestamp("end_at", { withTimezone: true }).notNull(),
+    status: text("status").notNull().default("planned"),
+    createdAt,
+    updatedAt
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [appUsers.id], name: "time_blocks_user_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.taskId, table.userId], foreignColumns: [tasks.id, tasks.userId], name: "time_blocks_task_owner_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.projectId, table.userId], foreignColumns: [projects.id, projects.userId], name: "time_blocks_project_owner_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.goalId, table.userId], foreignColumns: [goals.id, goals.userId], name: "time_blocks_goal_owner_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.lifeAreaId, table.userId], foreignColumns: [lifeAreas.id, lifeAreas.userId], name: "time_blocks_life_area_owner_fk" }).onDelete("restrict"),
+    uniqueIndex("time_blocks_id_user_unique").on(table.id, table.userId),
+    index("time_blocks_user_start_idx").on(table.userId, table.startAt),
+    index("time_blocks_user_status_start_idx").on(table.userId, table.status, table.startAt),
+    check("time_blocks_title_not_blank", sql`length(btrim(${table.title})) > 0`),
+    check("time_blocks_range_valid", sql`${table.endAt} >= ${table.startAt}`),
+    check("time_blocks_status_valid", inList(table.status, timeBlockStatuses))
+  ]
+);
+
 export const inboxItems = pgTable(
   "inbox_items",
   {
@@ -299,3 +360,5 @@ export type Milestone = typeof milestones.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type InboxItem = typeof inboxItems.$inferSelect;
 export type DailyPriority = typeof dailyPriorities.$inferSelect;
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type TimeBlock = typeof timeBlocks.$inferSelect;

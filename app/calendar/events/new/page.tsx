@@ -1,0 +1,2 @@
+import Link from "next/link"; import { AppShell } from "@/components/app-shell"; import { EventForm } from "@/components/calendar-forms";
+export default async function NewEventPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) { const { date } = await searchParams; return <AppShell><div className="mx-auto max-w-3xl"><Link href="/calendar" className="text-xs text-muted-foreground">Calendar /</Link><h1 className="my-7 text-3xl font-medium">New event</h1><EventForm initialDate={date} /></div></AppShell>; }

@@ -32,6 +32,14 @@ Goals can form arbitrary-depth same-owner trees. The Phase 3 repository walks th
 
 A project may link directly to both a goal and a life area. When the linked goal already has a life area, the project life area must match it. The repository rejects conflicting context before PostgreSQL ownership constraints provide the final boundary.
 
+## Calendar and planned time
+
+Calendar events represent fixed commitments. Scheduled tasks remain task records with `scheduled_start` and `scheduled_end`; scheduling never changes their due date, estimate, or actual minutes. Time blocks represent deliberately reserved time and can optionally reference same-owner planning context. They are not created automatically from task schedules.
+
+Events and time blocks are retained through status changes rather than destructive deletion. Range queries use overlap semantics (`start < range end` and `end > range start`) so items crossing midnight or a visible boundary remain visible.
+
+Planned minutes include scheduled-task duration and independent time-block duration. Events are commitments rather than planned work and are excluded. If a time block references a task that is itself scheduled in the visible range, the block is excluded so the task is counted once.
+
 ## Daily priorities
 
 `daily_priorities` preserves the tasks explicitly chosen for each local calendar date. Positions are restricted to 1–3, with unique owner/date/position and owner/date/task keys. The composite task ownership foreign key rejects cross-owner assignments, while `ON DELETE RESTRICT` prevents an archived or historical priority from disappearing through task deletion. Replacing today’s set never touches previous dates.

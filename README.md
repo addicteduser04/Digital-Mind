@@ -22,6 +22,8 @@ This repository contains the approved foundation, core relational model, executi
 
 Phase 3 adds owner-scoped life-area, goal, and project workflows under `/life`, `/goals`, and `/projects`. Detail pages expose linked work and task creation can be prefilled from its planning context.
 
+Phase 4 adds `/calendar` with day, week, and month views, event and time-block workflows, explicit task scheduling, and a calendar-aware Today page. Calendar entry uses `Africa/Casablanca` wall time and stores timezone-aware timestamps.
+
 The UI is intentionally available before database configuration. `GET /api/health` returns HTTP 503 with `database: "not_configured"` until `DATABASE_URL` is set, `database: "unavailable"` if a configured database cannot be reached, and HTTP 200 only after a successful query.
 
 ## Database workflow

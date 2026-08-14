@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Inbox, ListTodo, Plus, X } from "lucide-react";
+import { CalendarDays, Inbox, ListTodo, Plus, Square, X } from "lucide-react";
 import { CaptureForm } from "./capture-form";
 import { QuickCreateForm } from "./quick-create-form";
 
@@ -22,7 +22,7 @@ export function GlobalQuickAction() {
             <button type="button" role="tab" aria-selected={mode === "capture"} onClick={() => setMode("capture")} className={`choice-button ${mode === "capture" ? "choice-button-active" : ""}`}><Inbox size={16} />Quick capture</button>
           </div>
           <div className="mt-5">{mode === "task" ? <QuickCreateForm /> : <CaptureForm />}</div>
-          <Link href="/inbox" className="mt-4 block text-center text-xs text-muted-foreground">Open inbox</Link>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground"><Link href="/calendar/events/new" className="rounded-lg p-2 hover:bg-secondary"><CalendarDays className="mx-auto mb-1" size={15} />Event</Link><Link href="/calendar/blocks/new" className="rounded-lg p-2 hover:bg-secondary"><Square className="mx-auto mb-1" size={15} />Time block</Link><Link href="/inbox" className="rounded-lg p-2 hover:bg-secondary"><Inbox className="mx-auto mb-1" size={15} />Inbox</Link></div>
         </div>
       </dialog>
     </>

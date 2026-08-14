@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   commitmentLevels,
+  calendarEventStatuses,
   goalLevels,
   goalMeasurementTypes,
   goalStatuses,
@@ -9,7 +10,8 @@ import {
   milestoneStatuses,
   priorities,
   projectStatuses,
-  taskStatuses
+  taskStatuses,
+  timeBlockStatuses
 } from "./constants";
 
 const id = z.uuid();
@@ -138,6 +140,34 @@ export const createInboxItemSchema = z.object({
   }
 });
 
+export const createCalendarEventSchema = z.object({
+  userId: id,
+  title,
+  description,
+  startAt: timestamp,
+  endAt: timestamp,
+  allDay: z.boolean().default(false),
+  location: z.string().trim().max(500).optional(),
+  status: z.enum(calendarEventStatuses).default("confirmed")
+}).superRefine((value, context) => {
+  if (value.endAt < value.startAt) context.addIssue({ code: "custom", path: ["endAt"], message: "End cannot precede start." });
+});
+
+export const createTimeBlockSchema = z.object({
+  userId: id,
+  taskId: optionalId,
+  projectId: optionalId,
+  goalId: optionalId,
+  lifeAreaId: optionalId,
+  title,
+  description,
+  startAt: timestamp,
+  endAt: timestamp,
+  status: z.enum(timeBlockStatuses).default("planned")
+}).superRefine((value, context) => {
+  if (value.endAt < value.startAt) context.addIssue({ code: "custom", path: ["endAt"], message: "End cannot precede start." });
+});
+
 export const goalProgressSchema = z.object({
   userId: id,
   goalId: id,
@@ -152,3 +182,5 @@ export type CreateProjectInput = z.input<typeof createProjectSchema>;
 export type CreateMilestoneInput = z.input<typeof createMilestoneSchema>;
 export type CreateTaskInput = z.input<typeof createTaskSchema>;
 export type CreateInboxItemInput = z.input<typeof createInboxItemSchema>;
+export type CreateCalendarEventInput = z.input<typeof createCalendarEventSchema>;
+export type CreateTimeBlockInput = z.input<typeof createTimeBlockSchema>;

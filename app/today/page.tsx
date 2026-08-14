@@ -7,8 +7,10 @@ import { PriorityPicker } from "@/components/priority-picker";
 import { QuickCreateForm } from "@/components/quick-create-form";
 import { TaskRow } from "@/components/task-row";
 import { dateKeyInTimeZone, groupTodayTasks } from "@/lib/domain/today";
+import { periodFor, plannedMinutes, type CalendarItem } from "@/lib/domain/calendar";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { getTodayExecution } from "@/server/repositories/execution";
+import { listCalendarItems } from "@/server/repositories/calendar";
 
 export const metadata: Metadata = { title: "Today" };
 export const dynamic = "force-dynamic";
@@ -17,13 +19,15 @@ export default async function TodayPage() {
   const user = await getCurrentUser();
   const now = new Date();
   const today = dateKeyInTimeZone(now, user.timezone);
-  const execution = await getTodayExecution(user.id, today);
+  const dayPeriod = periodFor(today, "day", user.timezone);
+  const [execution, calendar] = await Promise.all([getTodayExecution(user.id, today), listCalendarItems(user.id, dayPeriod.start, dayPeriod.end)]);
   const groups = groupTodayTasks(execution.tasks, today, user.timezone);
   const priorityMap = new Map(execution.priorities.map((priority) => [priority.taskId, priority.position]));
   const dateLabel = new Intl.DateTimeFormat("en-US", { timeZone: user.timezone, weekday: "long", month: "long", day: "numeric" }).format(now);
   const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: user.timezone, hour: "numeric", hourCycle: "h23" }).format(now));
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const priorityTasks = execution.priorities.map((priority) => ({ ...priority, task: execution.tasks.find((task) => task.id === priority.taskId) })).filter((item) => item.task);
+  const planItems: CalendarItem[] = [...calendar.tasks.filter((task) => task.scheduledStart && task.scheduledEnd).map((task) => ({ id: task.id, kind: "task" as const, title: task.title, startAt: task.scheduledStart!, endAt: task.scheduledEnd! })), ...calendar.blocks.map(({ block }) => ({ id: block.id, kind: "block" as const, title: block.title, startAt: block.startAt, endAt: block.endAt, taskId: block.taskId }))];
 
   return (
     <AppShell>
@@ -52,6 +56,7 @@ export default async function TodayPage() {
         </div>
 
         <aside className="space-y-9">
+          <section><div className="flex items-end justify-between"><div><p className="section-kicker">Calendar</p><h2 className="section-title">Today’s schedule</h2></div><Link href={`/calendar?view=day&date=${today}`} className="text-xs text-muted-foreground">Open day</Link></div><p className="mt-2 text-xs text-muted-foreground">{plannedMinutes(planItems)} planned minutes</p><div className="mt-4 space-y-2">{calendar.events.map((event) => <TodayCalendarLine key={`event-${event.id}`} label="Event" title={event.title} at={event.allDay ? "All day" : formatTime(event.startAt, user.timezone)} />)}{calendar.blocks.map(({ block }) => <TodayCalendarLine key={`block-${block.id}`} label="Block" title={block.title} at={formatTime(block.startAt, user.timezone)} />)}{!calendar.events.length && !calendar.blocks.length ? <p className="rounded-xl border p-4 text-xs text-muted-foreground">No events or time blocks today.</p> : null}</div></section>
           <section><p className="section-kicker">Plan</p><h2 className="section-title">Add task</h2><div className="mt-4"><QuickCreateForm /></div></section>
           <section><p className="section-kicker">Record</p><h2 className="section-title">Quick capture</h2><div className="mt-4 rounded-2xl bg-ink p-5 text-ink-foreground"><div className="mb-5 flex items-start gap-3"><Inbox className="mt-0.5" size={17} /><div><p className="text-sm font-medium">Clear your mind</p><p className="mt-1 text-xs leading-5 text-ink-muted">Capture now. Organize later.</p></div></div><CaptureForm dark /></div></section>
         </aside>
@@ -59,6 +64,9 @@ export default async function TodayPage() {
     </AppShell>
   );
 }
+
+function TodayCalendarLine({ label, title, at }: { label: string; title: string; at: string }) { return <div className="rounded-xl border bg-card p-3"><p className="font-mono text-[9px] uppercase text-muted-foreground">{label} · {at}</p><p className="mt-1 text-sm font-medium">{title}</p></div>; }
+function formatTime(value: Date, timeZone: string) { return new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit" }).format(value); }
 
 function EmptyLine({ text }: { text: string }) { return <p className="py-6 text-center text-sm text-muted-foreground">{text}</p>; }
 

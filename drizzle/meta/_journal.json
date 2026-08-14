@@ -15,6 +15,13 @@
       "when": 1786715547696,
       "tag": "0001_wonderful_scream",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786719799924,
+      "tag": "0002_many_bug",
+      "breakpoints": true
     }
   ]
 }
