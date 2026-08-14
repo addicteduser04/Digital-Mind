@@ -6,11 +6,13 @@ import { CaptureForm } from "@/components/capture-form";
 import { PriorityPicker } from "@/components/priority-picker";
 import { QuickCreateForm } from "@/components/quick-create-form";
 import { TaskRow } from "@/components/task-row";
+import { HabitLogControl } from "@/components/behavior-forms";
 import { dateKeyInTimeZone, groupTodayTasks } from "@/lib/domain/today";
 import { periodFor, plannedMinutes, type CalendarItem } from "@/lib/domain/calendar";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { getTodayExecution } from "@/server/repositories/execution";
 import { listCalendarItems } from "@/server/repositories/calendar";
+import { getFocusDashboard, listHabitProgress } from "@/server/repositories/behavior";
 
 export const metadata: Metadata = { title: "Today" };
 export const dynamic = "force-dynamic";
@@ -20,7 +22,8 @@ export default async function TodayPage() {
   const now = new Date();
   const today = dateKeyInTimeZone(now, user.timezone);
   const dayPeriod = periodFor(today, "day", user.timezone);
-  const [execution, calendar] = await Promise.all([getTodayExecution(user.id, today), listCalendarItems(user.id, dayPeriod.start, dayPeriod.end)]);
+  const weekPeriod = periodFor(today, "week", user.timezone);
+  const [execution, calendar, habits, focus] = await Promise.all([getTodayExecution(user.id, today), listCalendarItems(user.id, dayPeriod.start, dayPeriod.end), listHabitProgress(user.id, today), getFocusDashboard(user.id, dayPeriod.start, dayPeriod.end, weekPeriod.start, weekPeriod.end)]);
   const groups = groupTodayTasks(execution.tasks, today, user.timezone);
   const priorityMap = new Map(execution.priorities.map((priority) => [priority.taskId, priority.position]));
   const dateLabel = new Intl.DateTimeFormat("en-US", { timeZone: user.timezone, weekday: "long", month: "long", day: "numeric" }).format(now);
@@ -38,6 +41,7 @@ export default async function TodayPage() {
 
       <div className="grid gap-12 pt-9 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,.85fr)] lg:gap-14">
         <div className="space-y-11">
+          {focus.active ? <Link href="/focus" className="block rounded-2xl bg-ink p-5 text-ink-foreground"><p className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">Active focus session</p><p className="mt-2 text-xl font-medium">Continue focusing</p><p className="mt-1 text-xs text-ink-muted">Started {formatTime(focus.active.startedAt, user.timezone)} · server timer is running</p></Link> : <div className="flex items-center justify-between rounded-2xl border bg-card p-4"><div><p className="text-sm font-medium">Ready to focus?</p><p className="mt-1 text-xs text-muted-foreground">{focus.summary.todayMinutes} measured minutes today</p></div><Link href="/focus" className="button-primary">Start focus</Link></div>}
           <section aria-labelledby="priorities-heading">
             <div className="flex items-end justify-between"><div><p className="section-kicker">Primary commitments</p><h2 id="priorities-heading" className="section-title">Top priorities</h2></div><span className="font-mono text-xs text-muted-foreground">{priorityTasks.length} / 3</span></div>
             <div className="mt-4 rounded-2xl border border-border bg-card px-4 sm:px-5">
@@ -53,6 +57,7 @@ export default async function TodayPage() {
           <TaskGroup title="Scheduled today" kicker="Protected time" tasks={groups.scheduled} priorityMap={priorityMap} timeZone={user.timezone} empty="Nothing scheduled yet." />
           <TaskGroup title="Due today" kicker="Due" tasks={groups.due} priorityMap={priorityMap} timeZone={user.timezone} empty="Nothing else due today." />
           <TaskGroup title="Other tasks" kicker="Available next" tasks={groups.other.slice(0, 8)} priorityMap={priorityMap} timeZone={user.timezone} empty="No active tasks." />
+          <section><div className="flex items-end justify-between"><div><p className="section-kicker">Behavior</p><h2 className="section-title">Habits</h2></div><Link href="/habits" className="text-xs text-muted-foreground">Manage</Link></div><div className="mt-4 divide-y border-y">{habits.length ? habits.map(({ habit, value, today: log }) => { const target = habit.trackingType === "frequency" ? habit.targetFrequency ?? 1 : Number(habit.targetValue ?? 1); const unit = habit.trackingType === "duration" ? "min" : habit.unit; const entryValue = habit.trackingType === "frequency" && habit.frequencyType === "weekly" ? Number(log?.value ?? 0) : value; return <div key={habit.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"><div><Link href={`/habits/${habit.id}`} className="text-sm font-medium">{habit.name}</Link><p className="mt-1 text-xs text-muted-foreground">{value} / {target} {unit ?? ""}{habit.trackingType === "frequency" && habit.frequencyType === "weekly" ? " this week" : " today"}</p></div><HabitLogControl habitId={habit.id} date={today} value={entryValue} type={habit.trackingType} target={target} unit={unit} /></div>; }) : <p className="py-8 text-center text-sm text-muted-foreground">No active habits.</p>}</div></section>
         </div>
 
         <aside className="space-y-9">

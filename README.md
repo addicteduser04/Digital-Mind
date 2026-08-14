@@ -24,6 +24,8 @@ Phase 3 adds owner-scoped life-area, goal, and project workflows under `/life`, 
 
 Phase 4 adds `/calendar` with day, week, and month views, event and time-block workflows, explicit task scheduling, and a calendar-aware Today page. Calendar entry uses `Africa/Casablanca` wall time and stores timezone-aware timestamps.
 
+Phase 5 adds `/habits` for daily behavior logging and `/focus` for server-authoritative focus sessions, manual work entry, and basic planned-versus-actual summaries. Running timer state persists in PostgreSQL and survives navigation or refresh.
+
 The UI is intentionally available before database configuration. `GET /api/health` returns HTTP 503 with `database: "not_configured"` until `DATABASE_URL` is set, `database: "unavailable"` if a configured database cannot be reached, and HTTP 200 only after a successful query.
 
 ## Database workflow

@@ -40,6 +40,20 @@ Events and time blocks are retained through status changes rather than destructi
 
 Planned minutes include scheduled-task duration and independent time-block duration. Events are commitments rather than planned work and are excluded. If a time block references a task that is itself scheduled in the visible range, the block is excluded so the task is counted once.
 
+## Habit semantics
+
+All habit types share `habits` and one canonical `habit_logs` row per owner, habit, and local date. Boolean values are 0/1. Quantity values use the habit’s declared unit. Duration values are normalized to minutes. Frequency values are occurrence counts for a date; weekly progress sums those daily counts across the Casablanca-local week. The per-log `completed` flag is intentionally not used as a daily success judgment for weekly habits.
+
+Corrections update the canonical daily log and its `updated_at`. Archiving a habit retains all logs and uses `ON DELETE RESTRICT` to protect history.
+
+## Focus and actual time
+
+`focus_sessions` is the source of truth for measured focused work. A partial unique index on `user_id` where status is `active` enforces one running session per owner even under concurrent starts. Timer starts and stops use database timestamps. Completed duration is whole elapsed minutes rounded down, never a client-submitted timer value; manual entries explicitly supply a positive whole-minute duration and are marked with source `manual`.
+
+Stopping focus does not complete a task, alter a time block, or log a habit. Timer-recorded timestamps are locked after completion, while context and notes remain correctable. `tasks.actual_minutes` remains separate legacy/manual task-level time and is never added to focus-session aggregates, preventing actual-time double counting.
+
+Planned-versus-actual comparisons use the Phase 4 planned-time rule against completed focus-session minutes for the same Casablanca-local range. Aggregation occurs in SQL for day, week, task, and project scopes.
+
 ## Daily priorities
 
 `daily_priorities` preserves the tasks explicitly chosen for each local calendar date. Positions are restricted to 1–3, with unique owner/date/position and owner/date/task keys. The composite task ownership foreign key rejects cross-owner assignments, while `ON DELETE RESTRICT` prevents an archived or historical priority from disappearing through task deletion. Replacing today’s set never touches previous dates.

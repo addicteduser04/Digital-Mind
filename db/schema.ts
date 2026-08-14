@@ -15,9 +15,14 @@ import {
 import {
   commitmentLevels,
   calendarEventStatuses,
+  focusSessionSources,
+  focusSessionStatuses,
   goalLevels,
   goalMeasurementTypes,
   goalStatuses,
+  habitFrequencyTypes,
+  habitStatuses,
+  habitTrackingTypes,
   inboxStatuses,
   lifeAreaStatuses,
   milestoneStatuses,
@@ -293,6 +298,104 @@ export const timeBlocks = pgTable(
   ]
 );
 
+export const habits = pgTable(
+  "habits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    lifeAreaId: uuid("life_area_id"),
+    name: text("name").notNull(),
+    description: text("description"),
+    trackingType: text("tracking_type").notNull(),
+    unit: text("unit"),
+    targetValue: numeric("target_value", { precision: 18, scale: 4 }),
+    frequencyType: text("frequency_type").notNull().default("daily"),
+    targetFrequency: integer("target_frequency"),
+    status: text("status").notNull().default("active"),
+    position: integer("position").notNull().default(0),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt,
+    updatedAt
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [appUsers.id], name: "habits_user_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.lifeAreaId, table.userId], foreignColumns: [lifeAreas.id, lifeAreas.userId], name: "habits_life_area_owner_fk" }).onDelete("restrict"),
+    uniqueIndex("habits_id_user_unique").on(table.id, table.userId),
+    index("habits_user_status_position_idx").on(table.userId, table.status, table.position),
+    index("habits_user_life_area_idx").on(table.userId, table.lifeAreaId),
+    check("habits_name_not_blank", sql`length(btrim(${table.name})) > 0`),
+    check("habits_tracking_type_valid", inList(table.trackingType, habitTrackingTypes)),
+    check("habits_frequency_type_valid", inList(table.frequencyType, habitFrequencyTypes)),
+    check("habits_status_valid", inList(table.status, habitStatuses)),
+    check("habits_target_value_positive", sql`${table.targetValue} is null or ${table.targetValue} > 0`),
+    check("habits_target_frequency_positive", sql`${table.targetFrequency} is null or ${table.targetFrequency} > 0`),
+    check("habits_position_nonnegative", sql`${table.position} >= 0`),
+    check("habits_archive_timestamp", sql`${table.status} <> 'archived' or ${table.archivedAt} is not null`)
+  ]
+);
+
+export const habitLogs = pgTable(
+  "habit_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    habitId: uuid("habit_id").notNull(),
+    logDate: date("log_date").notNull(),
+    value: numeric("value", { precision: 18, scale: 4 }).notNull().default("0"),
+    completed: integer("completed").notNull().default(0),
+    notes: text("notes"),
+    createdAt,
+    updatedAt
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [appUsers.id], name: "habit_logs_user_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.habitId, table.userId], foreignColumns: [habits.id, habits.userId], name: "habit_logs_habit_owner_fk" }).onDelete("restrict"),
+    uniqueIndex("habit_logs_user_habit_date_unique").on(table.userId, table.habitId, table.logDate),
+    index("habit_logs_user_date_idx").on(table.userId, table.logDate),
+    check("habit_logs_value_nonnegative", sql`${table.value} >= 0`),
+    check("habit_logs_completed_valid", sql`${table.completed} in (0, 1)`)
+  ]
+);
+
+export const focusSessions = pgTable(
+  "focus_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    taskId: uuid("task_id"),
+    projectId: uuid("project_id"),
+    goalId: uuid("goal_id"),
+    lifeAreaId: uuid("life_area_id"),
+    plannedMinutes: integer("planned_minutes"),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    durationMinutes: integer("duration_minutes"),
+    status: text("status").notNull(),
+    source: text("source").notNull().default("timer"),
+    notes: text("notes"),
+    createdAt,
+    updatedAt
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [appUsers.id], name: "focus_sessions_user_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.taskId, table.userId], foreignColumns: [tasks.id, tasks.userId], name: "focus_sessions_task_owner_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.projectId, table.userId], foreignColumns: [projects.id, projects.userId], name: "focus_sessions_project_owner_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.goalId, table.userId], foreignColumns: [goals.id, goals.userId], name: "focus_sessions_goal_owner_fk" }).onDelete("restrict"),
+    foreignKey({ columns: [table.lifeAreaId, table.userId], foreignColumns: [lifeAreas.id, lifeAreas.userId], name: "focus_sessions_life_area_owner_fk" }).onDelete("restrict"),
+    uniqueIndex("focus_sessions_one_active_user_unique").on(table.userId).where(sql`${table.status} = 'active'`),
+    index("focus_sessions_user_started_idx").on(table.userId, table.startedAt),
+    index("focus_sessions_user_status_idx").on(table.userId, table.status),
+    index("focus_sessions_user_task_started_idx").on(table.userId, table.taskId, table.startedAt),
+    index("focus_sessions_user_project_started_idx").on(table.userId, table.projectId, table.startedAt),
+    check("focus_sessions_status_valid", inList(table.status, focusSessionStatuses)),
+    check("focus_sessions_source_valid", inList(table.source, focusSessionSources)),
+    check("focus_sessions_planned_positive", sql`${table.plannedMinutes} is null or ${table.plannedMinutes} > 0`),
+    check("focus_sessions_duration_nonnegative", sql`${table.durationMinutes} is null or ${table.durationMinutes} >= 0`),
+    check("focus_sessions_time_order", sql`${table.endedAt} is null or ${table.endedAt} >= ${table.startedAt}`),
+    check("focus_sessions_state_consistent", sql`(${table.status} = 'active' and ${table.endedAt} is null and ${table.durationMinutes} is null) or (${table.status} <> 'active' and ${table.endedAt} is not null and ${table.durationMinutes} is not null)`)
+  ]
+);
+
 export const inboxItems = pgTable(
   "inbox_items",
   {
@@ -362,3 +465,6 @@ export type InboxItem = typeof inboxItems.$inferSelect;
 export type DailyPriority = typeof dailyPriorities.$inferSelect;
 export type CalendarEvent = typeof calendarEvents.$inferSelect;
 export type TimeBlock = typeof timeBlocks.$inferSelect;
+export type Habit = typeof habits.$inferSelect;
+export type HabitLog = typeof habitLogs.$inferSelect;
+export type FocusSession = typeof focusSessions.$inferSelect;

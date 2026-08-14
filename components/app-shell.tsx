@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { BriefcaseBusiness, CalendarDays, Compass, Inbox, ListTodo, Sparkles, Sun, Target } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Compass, Inbox, ListTodo, Repeat2, Sparkles, Sun, Target, Timer } from "lucide-react";
 import { GlobalQuickAction } from "./global-quick-action";
 
 const navItems = [
   { label: "Today", href: "/today", icon: Sun },
   { label: "Tasks", href: "/tasks", icon: ListTodo },
   { label: "Calendar", href: "/calendar", icon: CalendarDays },
+  { label: "Habits", href: "/habits", icon: Repeat2 },
+  { label: "Focus", href: "/focus", icon: Timer },
   { label: "Goals", href: "/goals", icon: Target },
   { label: "Projects", href: "/projects", icon: BriefcaseBusiness },
   { label: "Inbox", href: "/inbox", icon: Inbox },
@@ -53,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link href="/tasks" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><ListTodo size={20} /><span>Tasks</span></Link>
         <GlobalQuickAction />
         <Link href="/calendar" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><CalendarDays size={20} /><span>Calendar</span></Link>
-        <Link href="/goals" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><Target size={20} /><span>Plan</span></Link>
+        <Link href="/focus" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><Timer size={20} /><span>Focus</span></Link>
       </nav>
     </div>
   );

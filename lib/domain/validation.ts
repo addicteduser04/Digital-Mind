@@ -2,9 +2,14 @@ import { z } from "zod";
 import {
   commitmentLevels,
   calendarEventStatuses,
+  focusSessionSources,
+  focusSessionStatuses,
   goalLevels,
   goalMeasurementTypes,
   goalStatuses,
+  habitFrequencyTypes,
+  habitStatuses,
+  habitTrackingTypes,
   inboxStatuses,
   lifeAreaStatuses,
   milestoneStatuses,
@@ -168,6 +173,28 @@ export const createTimeBlockSchema = z.object({
   if (value.endAt < value.startAt) context.addIssue({ code: "custom", path: ["endAt"], message: "End cannot precede start." });
 });
 
+export const createHabitSchema = z.object({
+  userId: id,
+  lifeAreaId: optionalId,
+  name: title,
+  description,
+  trackingType: z.enum(habitTrackingTypes),
+  unit: z.string().trim().max(50).optional(),
+  targetValue: z.number().positive().optional(),
+  frequencyType: z.enum(habitFrequencyTypes).default("daily"),
+  targetFrequency: z.number().int().positive().optional(),
+  status: z.enum(habitStatuses).default("active"),
+  position: z.number().int().nonnegative().default(0)
+}).superRefine((value, context) => {
+  if (["quantity", "duration"].includes(value.trackingType) && value.targetValue === undefined) context.addIssue({ code: "custom", path: ["targetValue"], message: "This habit needs a target." });
+  if (value.trackingType === "frequency" && value.targetFrequency === undefined) context.addIssue({ code: "custom", path: ["targetFrequency"], message: "Frequency habits need an occurrence target." });
+  if (value.trackingType === "boolean" && (value.targetValue !== undefined || value.unit)) context.addIssue({ code: "custom", path: ["trackingType"], message: "Boolean habits do not use a numeric target or unit." });
+});
+
+export const habitLogSchema = z.object({ userId: id, habitId: id, logDate: dateOnly, value: z.number().nonnegative(), notes: z.string().trim().max(2_000).optional() });
+export const focusContextSchema = z.object({ taskId: optionalId, projectId: optionalId, goalId: optionalId, lifeAreaId: optionalId, plannedMinutes: z.number().int().positive().optional(), notes: z.string().trim().max(10_000).optional() });
+export const createFocusSessionSchema = focusContextSchema.extend({ userId: id, startedAt: timestamp, endedAt: timestamp.optional(), durationMinutes: z.number().int().nonnegative().optional(), status: z.enum(focusSessionStatuses), source: z.enum(focusSessionSources) });
+
 export const goalProgressSchema = z.object({
   userId: id,
   goalId: id,
@@ -184,3 +211,4 @@ export type CreateTaskInput = z.input<typeof createTaskSchema>;
 export type CreateInboxItemInput = z.input<typeof createInboxItemSchema>;
 export type CreateCalendarEventInput = z.input<typeof createCalendarEventSchema>;
 export type CreateTimeBlockInput = z.input<typeof createTimeBlockSchema>;
+export type CreateHabitInput = z.input<typeof createHabitSchema>;
