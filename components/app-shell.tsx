@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BriefcaseBusiness, CalendarDays, Compass, Inbox, ListTodo, Repeat2, Sparkles, Sun, Target, Timer } from "lucide-react";
+import { BookOpenCheck, BriefcaseBusiness, CalendarDays, Compass, Inbox, ListTodo, Repeat2, Sparkles, Sun, Target, Timer } from "lucide-react";
 import { GlobalQuickAction } from "./global-quick-action";
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { label: "Calendar", href: "/calendar", icon: CalendarDays },
   { label: "Habits", href: "/habits", icon: Repeat2 },
   { label: "Focus", href: "/focus", icon: Timer },
+  { label: "Reviews", href: "/reviews", icon: BookOpenCheck },
   { label: "Goals", href: "/goals", icon: Target },
   { label: "Projects", href: "/projects", icon: BriefcaseBusiness },
   { label: "Inbox", href: "/inbox", icon: Inbox },

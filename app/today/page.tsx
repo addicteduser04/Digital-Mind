@@ -13,6 +13,7 @@ import { getCurrentUser } from "@/server/auth/current-user";
 import { getTodayExecution } from "@/server/repositories/execution";
 import { listCalendarItems } from "@/server/repositories/calendar";
 import { getFocusDashboard, listHabitProgress } from "@/server/repositories/behavior";
+import { getExecutionTrends } from "@/server/repositories/reviews";
 
 export const metadata: Metadata = { title: "Today" };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function TodayPage() {
   const today = dateKeyInTimeZone(now, user.timezone);
   const dayPeriod = periodFor(today, "day", user.timezone);
   const weekPeriod = periodFor(today, "week", user.timezone);
-  const [execution, calendar, habits, focus] = await Promise.all([getTodayExecution(user.id, today), listCalendarItems(user.id, dayPeriod.start, dayPeriod.end), listHabitProgress(user.id, today), getFocusDashboard(user.id, dayPeriod.start, dayPeriod.end, weekPeriod.start, weekPeriod.end)]);
+  const [execution, calendar, habits, focus, trends] = await Promise.all([getTodayExecution(user.id, today), listCalendarItems(user.id, dayPeriod.start, dayPeriod.end), listHabitProgress(user.id, today), getFocusDashboard(user.id, dayPeriod.start, dayPeriod.end, weekPeriod.start, weekPeriod.end), getExecutionTrends(user.id, today, user.timezone)]);
   const groups = groupTodayTasks(execution.tasks, today, user.timezone);
   const priorityMap = new Map(execution.priorities.map((priority) => [priority.taskId, priority.position]));
   const dateLabel = new Intl.DateTimeFormat("en-US", { timeZone: user.timezone, weekday: "long", month: "long", day: "numeric" }).format(now);
@@ -61,6 +62,7 @@ export default async function TodayPage() {
         </div>
 
         <aside className="space-y-9">
+          <section className="rounded-2xl border bg-card p-5"><div className="flex items-start justify-between"><div><p className="section-kicker">Execution</p><p className="mt-2 font-mono text-3xl">{trends.today ?? "—"}</p></div><Link href={`/reviews/daily/${today}`} className="button-secondary">{trends.todayReviewCompleted ? "Review details" : "Review today"}</Link></div><div className="mt-4 grid grid-cols-2 gap-3 text-xs"><p><span className="text-muted-foreground">7-day</span><br /><strong>{trends.sevenDay ?? "—"}</strong> <span className="text-muted-foreground">({trends.evaluable7} days)</span></p><p><span className="text-muted-foreground">30-day</span><br /><strong>{trends.thirtyDay ?? "—"}</strong> <span className="text-muted-foreground">({trends.evaluable30} days)</span></p></div></section>
           <section><div className="flex items-end justify-between"><div><p className="section-kicker">Calendar</p><h2 className="section-title">Today’s schedule</h2></div><Link href={`/calendar?view=day&date=${today}`} className="text-xs text-muted-foreground">Open day</Link></div><p className="mt-2 text-xs text-muted-foreground">{plannedMinutes(planItems)} planned minutes</p><div className="mt-4 space-y-2">{calendar.events.map((event) => <TodayCalendarLine key={`event-${event.id}`} label="Event" title={event.title} at={event.allDay ? "All day" : formatTime(event.startAt, user.timezone)} />)}{calendar.blocks.map(({ block }) => <TodayCalendarLine key={`block-${block.id}`} label="Block" title={block.title} at={formatTime(block.startAt, user.timezone)} />)}{!calendar.events.length && !calendar.blocks.length ? <p className="rounded-xl border p-4 text-xs text-muted-foreground">No events or time blocks today.</p> : null}</div></section>
           <section><p className="section-kicker">Plan</p><h2 className="section-title">Add task</h2><div className="mt-4"><QuickCreateForm /></div></section>
           <section><p className="section-kicker">Record</p><h2 className="section-title">Quick capture</h2><div className="mt-4 rounded-2xl bg-ink p-5 text-ink-foreground"><div className="mb-5 flex items-start gap-3"><Inbox className="mt-0.5" size={17} /><div><p className="text-sm font-medium">Clear your mind</p><p className="mt-1 text-xs leading-5 text-ink-muted">Capture now. Organize later.</p></div></div><CaptureForm dark /></div></section>

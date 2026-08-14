@@ -63,3 +63,24 @@ Today grouping uses one operational list with deterministic precedence: overdue,
 ## Bootstrap user
 
 No production bootstrap user is created automatically. `createAppUser` provides the future authentication/bootstrap boundary, while integration tests create uniquely named isolated users and remove them afterward. This avoids hardcoded personal information and accidental seed data in Neon.
+
+## Reviews and execution metrics
+
+`daily_reviews` stores one canonical review per owner and local date. `weekly_reviews` stores one review per owner and Monday-based week. Both use `ON DELETE RESTRICT`, preserve `created_at`, and update `updated_at` on edits. Daily reviews may be written for today or a past date; future daily reviews are rejected. Weekly reviews may be written for the current or a past Monday-based week; future weeks are rejected.
+
+The subjective 1–5 review rating is intentionally separate from the deterministic **Execution Score**. The rating answers how the period felt; it never contributes points to the score.
+
+The initial Execution Score is calculated dynamically from source data rather than persisted as a second historical truth. Corrections to priorities, habit logs, focus sessions, or reviews therefore update the historical score consistently. The available components are:
+
+- Explicit daily priority completion: 35%
+- Planned execution (`actual focus minutes / planned minutes`, capped at 100%): 25%
+- Applicable daily-habit fulfillment, capped at 100% per habit: 25%
+- Daily review completion: 15%
+
+Weekly-frequency habits are excluded from the daily score because a weekly target should not be interpreted as a daily failure. They are included in weekly habit consistency by summing occurrences across the Monday-based Casablanca-local week and comparing with the weekly target. Historical applicability uses habit creation and archival timestamps, so archiving a habit later does not erase it from past evaluable periods. Habit target edits are not versioned yet, so historical score recalculation uses the habit’s current target definition; target-version history remains a Phase 7+ limitation.
+
+If a component is not applicable on a date, its weight is removed and the remaining weights are re-normalized to 100%. A date with no evaluable behavior returns no score rather than zero. Seven- and thirty-day trends average only evaluable days; missing days are not fabricated as failures.
+
+Planned time keeps the Phase 4 source-of-truth rule: scheduled tasks plus independent time blocks, excluding a block that references a task already scheduled in the range. Actual time keeps the Phase 5 rule: completed `focus_sessions` only. `tasks.actual_minutes` is not mixed into the execution ratio.
+
+Weekly review context is deterministic. It summarizes explicit priorities, task completions, planned and focused minutes, daily and weekly habit consistency, completed reviews, milestone completions, current overdue context, upcoming project deadlines, and goal progress samples. Goal movement uses the latest progress sample before the week as the baseline when available and the last sample recorded during the week as the ending value. Project progress deltas remain unavailable because Digital Mind does not yet keep project-progress history.

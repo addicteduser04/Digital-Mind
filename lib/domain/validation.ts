@@ -12,6 +12,7 @@ import {
   habitTrackingTypes,
   inboxStatuses,
   lifeAreaStatuses,
+  mainObjectiveStatuses,
   milestoneStatuses,
   priorities,
   projectStatuses,
@@ -194,6 +195,10 @@ export const createHabitSchema = z.object({
 export const habitLogSchema = z.object({ userId: id, habitId: id, logDate: dateOnly, value: z.number().nonnegative(), notes: z.string().trim().max(2_000).optional() });
 export const focusContextSchema = z.object({ taskId: optionalId, projectId: optionalId, goalId: optionalId, lifeAreaId: optionalId, plannedMinutes: z.number().int().positive().optional(), notes: z.string().trim().max(10_000).optional() });
 export const createFocusSessionSchema = focusContextSchema.extend({ userId: id, startedAt: timestamp, endedAt: timestamp.optional(), durationMinutes: z.number().int().nonnegative().optional(), status: z.enum(focusSessionStatuses), source: z.enum(focusSessionSources) });
+
+const reviewText = z.string().trim().min(1).max(10_000);
+export const dailyReviewSchema = z.object({ userId: id, reviewDate: dateOnly, rating: z.number().int().min(1).max(5), mainObjectiveStatus: z.enum(mainObjectiveStatuses), wentWell: reviewText, blocker: reviewText, tomorrowPriority: reviewText, notes: z.string().trim().max(10_000).optional() });
+export const weeklyReviewSchema = z.object({ userId: id, weekStart: dateOnly, rating: z.number().int().min(1).max(5), summary: reviewText, whatWorked: reviewText, whatDidnt: reviewText, shouldChange: reviewText, nextWeekFocus: reviewText, notes: z.string().trim().max(10_000).optional() });
 
 export const goalProgressSchema = z.object({
   userId: id,

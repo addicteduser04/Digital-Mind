@@ -25,6 +25,7 @@ import {
   habitTrackingTypes,
   inboxStatuses,
   lifeAreaStatuses,
+  mainObjectiveStatuses,
   milestoneStatuses,
   priorities,
   projectStatuses,
@@ -396,6 +397,40 @@ export const focusSessions = pgTable(
   ]
 );
 
+export const dailyReviews = pgTable(
+  "daily_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(), userId: uuid("user_id").notNull(), reviewDate: date("review_date").notNull(), rating: integer("rating").notNull(), mainObjectiveStatus: text("main_objective_status").notNull(), wentWell: text("went_well").notNull(), blocker: text("blocker").notNull(), tomorrowPriority: text("tomorrow_priority").notNull(), notes: text("notes"), createdAt, updatedAt
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [appUsers.id], name: "daily_reviews_user_fk" }).onDelete("restrict"),
+    uniqueIndex("daily_reviews_user_date_unique").on(table.userId, table.reviewDate),
+    check("daily_reviews_rating_range", sql`${table.rating} between 1 and 5`),
+    check("daily_reviews_objective_status_valid", inList(table.mainObjectiveStatus, mainObjectiveStatuses)),
+    check("daily_reviews_went_well_not_blank", sql`length(btrim(${table.wentWell})) > 0`),
+    check("daily_reviews_blocker_not_blank", sql`length(btrim(${table.blocker})) > 0`),
+    check("daily_reviews_tomorrow_priority_not_blank", sql`length(btrim(${table.tomorrowPriority})) > 0`)
+  ]
+);
+
+export const weeklyReviews = pgTable(
+  "weekly_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(), userId: uuid("user_id").notNull(), weekStart: date("week_start").notNull(), rating: integer("rating").notNull(), summary: text("summary").notNull(), whatWorked: text("what_worked").notNull(), whatDidnt: text("what_didnt").notNull(), shouldChange: text("should_change").notNull(), nextWeekFocus: text("next_week_focus").notNull(), notes: text("notes"), createdAt, updatedAt
+  },
+  (table) => [
+    foreignKey({ columns: [table.userId], foreignColumns: [appUsers.id], name: "weekly_reviews_user_fk" }).onDelete("restrict"),
+    uniqueIndex("weekly_reviews_user_week_unique").on(table.userId, table.weekStart),
+    check("weekly_reviews_rating_range", sql`${table.rating} between 1 and 5`),
+    check("weekly_reviews_week_is_monday", sql`extract(isodow from ${table.weekStart}) = 1`),
+    check("weekly_reviews_summary_not_blank", sql`length(btrim(${table.summary})) > 0`),
+    check("weekly_reviews_what_worked_not_blank", sql`length(btrim(${table.whatWorked})) > 0`),
+    check("weekly_reviews_what_didnt_not_blank", sql`length(btrim(${table.whatDidnt})) > 0`),
+    check("weekly_reviews_should_change_not_blank", sql`length(btrim(${table.shouldChange})) > 0`),
+    check("weekly_reviews_next_focus_not_blank", sql`length(btrim(${table.nextWeekFocus})) > 0`)
+  ]
+);
+
 export const inboxItems = pgTable(
   "inbox_items",
   {
@@ -468,3 +503,5 @@ export type TimeBlock = typeof timeBlocks.$inferSelect;
 export type Habit = typeof habits.$inferSelect;
 export type HabitLog = typeof habitLogs.$inferSelect;
 export type FocusSession = typeof focusSessions.$inferSelect;
+export type DailyReview = typeof dailyReviews.$inferSelect;
+export type WeeklyReview = typeof weeklyReviews.$inferSelect;

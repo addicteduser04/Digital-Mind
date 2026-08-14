@@ -5,6 +5,7 @@ const expectedTables = [
   "app_users",
   "calendar_events",
   "daily_priorities",
+  "daily_reviews",
   "focus_sessions",
   "goal_progress_history",
   "goals",
@@ -15,7 +16,8 @@ const expectedTables = [
   "milestones",
   "projects",
   "tasks",
-  "time_blocks"
+  "time_blocks",
+  "weekly_reviews"
 ] as const;
 
 async function main() {

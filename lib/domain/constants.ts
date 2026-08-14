@@ -15,3 +15,4 @@ export const habitFrequencyTypes = ["daily", "weekly"] as const;
 export const habitStatuses = ["active", "archived"] as const;
 export const focusSessionStatuses = ["active", "completed", "cancelled"] as const;
 export const focusSessionSources = ["timer", "manual"] as const;
+export const mainObjectiveStatuses = ["achieved", "partial", "missed", "not_set"] as const;
