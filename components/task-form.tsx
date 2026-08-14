@@ -20,7 +20,7 @@ type EditableTask = {
   projectId: string | null; goalId: string | null; lifeAreaId: string | null;
 };
 
-export function TaskForm({ options, task }: { options: Options; task?: EditableTask }) {
+export function TaskForm({ options, task, prefill }: { options: Options; task?: EditableTask; prefill?: { projectId?: string; goalId?: string; lifeAreaId?: string } }) {
   const [state, action] = useActionState(task ? updateTaskAction : createTaskAction, initialActionState);
   const error = (name: string) => state.errors?.[name]?.[0];
   return (
@@ -54,9 +54,9 @@ export function TaskForm({ options, task }: { options: Options; task?: EditableT
         <h2 className="form-section-title">Life context</h2>
         <p className="mt-1 text-xs text-muted-foreground">Connect this task only where it adds useful context.</p>
         <div className="mt-4 grid gap-5 sm:grid-cols-3">
-          <OwnedSelect label="Project" name="projectId" value={task?.projectId} options={options.projects.map(({ id, title }) => ({ id, label: title }))} />
-          <OwnedSelect label="Goal" name="goalId" value={task?.goalId} options={options.goals.map(({ id, title }) => ({ id, label: title }))} />
-          <OwnedSelect label="Life area" name="lifeAreaId" value={task?.lifeAreaId} options={options.lifeAreas.map(({ id, name }) => ({ id, label: name }))} />
+          <OwnedSelect label="Project" name="projectId" value={task?.projectId ?? prefill?.projectId} options={options.projects.map(({ id, title }) => ({ id, label: title }))} />
+          <OwnedSelect label="Goal" name="goalId" value={task?.goalId ?? prefill?.goalId} options={options.goals.map(({ id, title }) => ({ id, label: title }))} />
+          <OwnedSelect label="Life area" name="lifeAreaId" value={task?.lifeAreaId ?? prefill?.lifeAreaId} options={options.lifeAreas.map(({ id, name }) => ({ id, label: name }))} />
         </div>
       </div>
       <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">

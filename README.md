@@ -2,7 +2,7 @@
 
 Digital Mind is a private personal operating system built around the loop **Plan → Execute → Record → Review → Adjust**.
 
-This repository contains the approved foundation and the Phase 1 core relational model. UI execution workflows remain out of scope until Phase 2.
+This repository contains the approved foundation, core relational model, execution workflows, and Phase 3 planning experience.
 
 ## Requirements
 
@@ -19,6 +19,8 @@ This repository contains the approved foundation and the Phase 1 core relational
 5. Run `npm run db:bootstrap-user`. This idempotently creates or reuses the single owner and writes `DIGITAL_MIND_USER_ID` to the ignored `.env.local` without printing it.
 6. Start development: `npm run dev`.
 7. Open `http://localhost:3000` (the root redirects to `/today`).
+
+Phase 3 adds owner-scoped life-area, goal, and project workflows under `/life`, `/goals`, and `/projects`. Detail pages expose linked work and task creation can be prefilled from its planning context.
 
 The UI is intentionally available before database configuration. `GET /api/health` returns HTTP 503 with `database: "not_configured"` until `DATABASE_URL` is set, `database: "unavailable"` if a configured database cannot be reached, and HTTP 200 only after a successful query.
 
@@ -50,4 +52,4 @@ git diff --check
 
 Database code is server-only. Environment files are ignored except `.env.example`; the database URL must never use a `NEXT_PUBLIC_` prefix. Authentication is required before any production deployment. Do not deploy Digital Mind as a publicly usable application yet.
 
-`DIGITAL_MIND_USER_ID` is a temporary server-only owner boundary for Phase 2. It must not use a `NEXT_PUBLIC_` prefix. The application is still private-development software and must not be publicly deployed until authentication replaces this boundary.
+`DIGITAL_MIND_USER_ID` is a temporary server-only owner boundary for the private Phase 2–3 application. It must not use a `NEXT_PUBLIC_` prefix. The application must not be publicly deployed until authentication replaces this boundary.

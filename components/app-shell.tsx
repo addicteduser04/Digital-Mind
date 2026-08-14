@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { Inbox, ListTodo, Sparkles, Sun } from "lucide-react";
+import { BriefcaseBusiness, Compass, Inbox, ListTodo, Sparkles, Sun, Target } from "lucide-react";
 import { GlobalQuickAction } from "./global-quick-action";
 
 const navItems = [
   { label: "Today", href: "/today", icon: Sun },
   { label: "Tasks", href: "/tasks", icon: ListTodo },
-  { label: "Inbox", href: "/inbox", icon: Inbox }
+  { label: "Goals", href: "/goals", icon: Target },
+  { label: "Projects", href: "/projects", icon: BriefcaseBusiness },
+  { label: "Inbox", href: "/inbox", icon: Inbox },
+  { label: "Life", href: "/life", icon: Compass }
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -48,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link href="/today" aria-current="page" className="flex flex-col items-center justify-center gap-1 text-[11px] font-medium"><Sun size={20} /><span>Today</span></Link>
         <Link href="/tasks" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><ListTodo size={20} /><span>Tasks</span></Link>
         <GlobalQuickAction />
-        <Link href="/inbox" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><Inbox size={20} /><span>Inbox</span></Link>
+        <Link href="/goals" className="flex flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"><Target size={20} /><span>Plan</span></Link>
       </nav>
     </div>
   );

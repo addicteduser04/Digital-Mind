@@ -1,0 +1,6 @@
+import { AppShell } from "@/components/app-shell";
+import { ProjectForm } from "@/components/planning-forms";
+import { getCurrentUserId } from "@/server/auth/current-user";
+import { getGoalOptions } from "@/server/repositories/planning";
+export const dynamic = "force-dynamic";
+export default async function NewProjectPage({ searchParams }: { searchParams: Promise<{ goal?: string; lifeArea?: string }> }) { const q = await searchParams; const options = await getGoalOptions(await getCurrentUserId()); const goal = options.goals.find((x) => x.id === q.goal); const area = options.lifeAreas.find((x) => x.id === q.lifeArea) ?? options.lifeAreas.find((x) => x.id === goal?.lifeAreaId); const prefill = goal || area ? { id: "", title: "", description: null, goalId: goal?.id ?? null, lifeAreaId: area?.id ?? null, priority: "medium", status: "planned", startDate: null, deadline: null, progress: "0" } : undefined; return <AppShell><div className="mx-auto max-w-4xl"><h1 className="mb-8 text-3xl font-medium tracking-tight">New project</h1><ProjectForm project={prefill} goals={options.goals.map((x) => ({ id: x.id, label: x.title }))} lifeAreas={options.lifeAreas.map((x) => ({ id: x.id, label: x.name }))} /></div></AppShell>; }

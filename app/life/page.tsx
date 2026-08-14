@@ -1,0 +1,20 @@
+import Link from "next/link";
+import { ArrowDown, ArrowUp, Plus } from "lucide-react";
+import { reorderLifeAreasAction } from "@/app/planning-actions";
+import { AppShell } from "@/components/app-shell";
+import { getCurrentUserId } from "@/server/auth/current-user";
+import { listLifeAreas } from "@/server/repositories/planning";
+
+export const dynamic = "force-dynamic";
+export default async function LifePage({ searchParams }: { searchParams: Promise<{ archived?: string }> }) {
+  const archived = (await searchParams).archived === "1";
+  const areas = await listLifeAreas(await getCurrentUserId(), archived);
+  return <AppShell><PageHead kicker="Direction" title="Life areas" description="The enduring parts of life that deserve deliberate attention." action="New life area" href="/life/new" />
+    <div className="mt-7 flex justify-end"><Link href={archived ? "/life" : "/life?archived=1"} className="text-xs text-muted-foreground">{archived ? "Active only" : "Include archived"}</Link></div>
+    <div className="mt-4 divide-y divide-border border-y border-border">{areas.length ? areas.map((area, index) => <article key={area.id} className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><Link href={`/life/${area.id}`} className="min-w-0"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-xl bg-secondary text-xs uppercase">{area.icon?.slice(0, 2) || area.name.slice(0, 1)}</span><div><h2 className="font-medium tracking-tight">{area.name}</h2><p className="mt-1 text-xs text-muted-foreground">{area.activeGoals} active goals · {area.activeProjects} active projects</p></div></div></Link><div className="flex items-center gap-4"><div className="flex gap-5 text-center"><Metric label="Importance" value={area.importance} /><Metric label="Satisfaction" value={area.satisfaction} /></div>{area.status === "active" ? <div className="flex"><OrderButton areas={areas.map(({ id }) => id)} index={index} direction="up" disabled={index === 0} /><OrderButton areas={areas.map(({ id }) => id)} index={index} direction="down" disabled={index === areas.length - 1} /></div> : <span className="text-xs text-muted-foreground">Archived</span>}</div></article>) : <Empty title="No life areas yet." action="Create your first life area" href="/life/new" />}</div>
+  </AppShell>;
+}
+function OrderButton({ areas, index, direction, disabled }: { areas: string[]; index: number; direction: "up" | "down"; disabled: boolean }) { const target = direction === "up" ? index - 1 : index + 1; const ordered = [...areas]; if (!disabled) [ordered[index], ordered[target]] = [ordered[target]!, ordered[index]!]; const Icon = direction === "up" ? ArrowUp : ArrowDown; return <form action={reorderLifeAreasAction}>{ordered.map((id) => <input key={id} type="hidden" name="ids" value={id} />)}<button disabled={disabled} className="button-icon-quiet" aria-label={`Move ${direction}`}><Icon size={14} /></button></form>; }
+function Metric({ label, value }: { label: string; value: number | null }) { return <div><p className="font-mono text-sm">{value ?? "—"}</p><p className="text-[10px] text-muted-foreground">{label}</p></div>; }
+function PageHead({ kicker, title, description, action, href }: { kicker: string; title: string; description: string; action: string; href: string }) { return <header className="flex flex-col gap-5 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between"><div><p className="section-kicker">{kicker}</p><h1 className="mt-2 text-4xl font-medium tracking-[-0.04em]">{title}</h1><p className="mt-2 text-sm text-muted-foreground">{description}</p></div><Link href={href} className="button-primary self-start sm:self-auto"><Plus size={16} />{action}</Link></header>; }
+function Empty({ title, action, href }: { title: string; action: string; href: string }) { return <div className="py-16 text-center"><p className="text-sm font-medium">{title}</p><Link href={href} className="mt-3 inline-block text-xs underline">{action}</Link></div>; }

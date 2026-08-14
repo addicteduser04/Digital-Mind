@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { Inbox, ListTodo, Plus, X } from "lucide-react";
 import { CaptureForm } from "./capture-form";
 import { QuickCreateForm } from "./quick-create-form";
@@ -21,6 +22,7 @@ export function GlobalQuickAction() {
             <button type="button" role="tab" aria-selected={mode === "capture"} onClick={() => setMode("capture")} className={`choice-button ${mode === "capture" ? "choice-button-active" : ""}`}><Inbox size={16} />Quick capture</button>
           </div>
           <div className="mt-5">{mode === "task" ? <QuickCreateForm /> : <CaptureForm />}</div>
+          <Link href="/inbox" className="mt-4 block text-center text-xs text-muted-foreground">Open inbox</Link>
         </div>
       </dialog>
     </>

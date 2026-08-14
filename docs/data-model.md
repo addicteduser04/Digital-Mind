@@ -24,6 +24,14 @@ Events use `timestamp with time zone`; date-only planning concepts use `date`. P
 
 `goal_progress_history` is the one Phase 1 history foundation. Goal progress is central and otherwise destructive to overwrite. Each sample retains progress, optional current value, owner, goal, and recording timestamp. Additional project, life-area, and analytics snapshots wait until their real workflows exist.
 
+Phase 3 writes a sample only when progress or the supplied current value changes. Completing, reopening, or archiving a goal leaves its samples intact. Project progress remains explicitly manual; milestone completion is shown as a separate rollup and does not silently overwrite project progress.
+
+## Planning context
+
+Goals can form arbitrary-depth same-owner trees. The Phase 3 repository walks the proposed parent chain before every goal-parent update and rejects cycles. Life-area and detail queries always include the active owner boundary, including their linked tasks and rollups.
+
+A project may link directly to both a goal and a life area. When the linked goal already has a life area, the project life area must match it. The repository rejects conflicting context before PostgreSQL ownership constraints provide the final boundary.
+
 ## Daily priorities
 
 `daily_priorities` preserves the tasks explicitly chosen for each local calendar date. Positions are restricted to 1–3, with unique owner/date/position and owner/date/task keys. The composite task ownership foreign key rejects cross-owner assignments, while `ON DELETE RESTRICT` prevents an archived or historical priority from disappearing through task deletion. Replacing today’s set never touches previous dates.

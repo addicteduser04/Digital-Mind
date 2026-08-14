@@ -1,0 +1,6 @@
+import { AppShell } from "@/components/app-shell";
+import { GoalForm } from "@/components/planning-forms";
+import { getCurrentUserId } from "@/server/auth/current-user";
+import { getGoalOptions } from "@/server/repositories/planning";
+export const dynamic = "force-dynamic";
+export default async function NewGoalPage({ searchParams }: { searchParams: Promise<{ lifeArea?: string; parent?: string }> }) { const query = await searchParams; const options = await getGoalOptions(await getCurrentUserId()); const validArea = options.lifeAreas.some((x) => x.id === query.lifeArea) ? query.lifeArea ?? null : null; const validParent = options.goals.some((x) => x.id === query.parent) ? query.parent ?? null : null; return <AppShell><div className="mx-auto max-w-4xl"><h1 className="mb-8 text-3xl font-medium tracking-tight">New goal</h1><GoalForm lifeAreas={options.lifeAreas.map((x) => ({ id: x.id, label: x.name }))} parentGoals={options.goals.map((x) => ({ id: x.id, label: x.title }))} goal={validArea || validParent ? { id: "", title: "", description: null, lifeAreaId: validArea, parentGoalId: validParent, level: "general", measurementType: "manual", targetValue: null, currentValue: null, unit: null, startDate: null, deadline: null, status: "draft", priority: "medium", progress: "0" } : undefined} /></div></AppShell>; }
