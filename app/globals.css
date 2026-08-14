@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  --background: oklch(0.975 0.008 90);
+  --foreground: oklch(0.19 0.015 150);
+  --card: oklch(0.995 0.003 90);
+  --card-foreground: var(--foreground);
+  --secondary: oklch(0.94 0.01 100);
+  --muted-foreground: oklch(0.51 0.014 130);
+  --border: oklch(0.88 0.012 100);
+  --sidebar: oklch(0.955 0.011 95);
+  --sidebar-accent: oklch(0.9 0.025 140);
+  --success: oklch(0.61 0.13 152);
+  --ink: oklch(0.2 0.018 155);
+  --ink-foreground: oklch(0.97 0.008 100);
+  --ink-muted: oklch(0.75 0.012 130);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-secondary: var(--secondary);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-success: var(--success);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-muted: var(--ink-muted);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* { border-color: var(--border); }
+html { background: var(--background); }
+body { min-height: 100vh; background: var(--background); color: var(--foreground); font-family: var(--font-geist-sans), sans-serif; }
+button, a { outline-offset: 3px; }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--foreground); }
+
+@layer components {
+  .section-kicker { @apply font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground; }
+  .section-title { @apply mt-1.5 text-xl font-medium tracking-[-0.025em]; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
